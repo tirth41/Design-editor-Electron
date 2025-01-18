@@ -1,0 +1,26 @@
+{
+  "name": "design-editor",
+  "version": "1.0.0",
+  "description": "Electron app to creat a design editor with react and websockets.",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tirth41/Design-Editor.git"
+  },
+  "author": "Tirth Patel",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tirth41/Design-Editor/issues"
+  },
+  "homepage": "https://github.com/tirth41/Design-Editor#readme",
+  "devDependencies": {
+    "electron": "^34.0.0"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

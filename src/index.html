@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>User Screen</title>
+    <style>
+
+
+        #screenID-Gen {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #screenID {
+            margin-top: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+  <div id="screenID-Gen">
+    <button onclick="registerScreen()" >Generate Screen ID</button>
+    <p id="screenID"></p>
+  </div>
+    <canvas style="transform: scale(1.4); transform-origin: 0 0; margin:0; padding:0;" id="canvasEl" style="pointer-events:none" height="675" width="1200"></canvas>
+    <script src="https://cdn.jsdelivr.net/npm/fabric@latest/dist/index.min.js"></script>
+    <script>
+        let socket;
+        let screenID;
+
+        function registerScreen() {
+            screenID = Math.random().toString(36).substring(2, 10);
+            document.getElementById('screenID').innerText = "Screen ID: " + screenID;
+            
+            socket = new WebSocket('ws://34.123.38.44:3001');
+
+            socket.onopen = () => {
+                socket.send(JSON.stringify({ type: 'register', screenID }));
+            };
+
+            socket.onmessage = (event) => {
+                
+                const data = JSON.parse(event.data);
+                canvas.clear();
+                if (data.type === 'client2_connected') {
+                    alert("Client 2 connected!");
+                } else if (data.type === 'message') {
+                    let content = JSON.parse(data.content);
+                    console.log(content);
+                    if (Array.isArray(content)) {
+                      document.getElementById("screenID-Gen").style.display = "none";
+            content.forEach(element => {
+                if (element.type === "textbox") {
+                    addText(element.text, element.left,element.top,element.scaleX,element.scaleY,element.angle)
+                } else {
+                    addShape(element.type,element.left,element.top,element.scaleX,element.scaleY,element.angle)
+                }
+            });
+        } else {
+            console.error("Expected an array, but got:", typeof content, content);
+        }
+                    //document.getElementById('messages').innerHTML += `<p>Message: ${data.content}</p>`;
+                }
+            };
+        }
+    </script>
+    <script>
+        const canvasEl = document.getElementById("canvasEl");
+        const canvas = new fabric.Canvas(canvasEl);
+
+// create a rect object
+const deleteIcon =
+  "data:image/svg+xml,%3C%3Fxml version='1.0' encoding='utf-8'%3F%3E%3C!DOCTYPE svg PUBLIC '-//W3C//DTD SVG 1.1//EN' 'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3E%3Csvg version='1.1' id='Ebene_1' xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink' x='0px' y='0px' width='595.275px' height='595.275px' viewBox='200 215 230 470' xml:space='preserve'%3E%3Ccircle style='fill:%23F44336;' cx='299.76' cy='439.067' r='218.516'/%3E%3Cg%3E%3Crect x='267.162' y='307.978' transform='matrix(0.7071 -0.7071 0.7071 0.7071 -222.6202 340.6915)' style='fill:white;' width='65.545' height='262.18'/%3E%3Crect x='266.988' y='308.153' transform='matrix(0.7071 0.7071 -0.7071 0.7071 398.3889 -83.3116)' style='fill:white;' width='65.544' height='262.179'/%3E%3C/g%3E%3C/svg%3E";
+
+console.log("script working fine")
+var deleteImg = document.createElement('img');
+deleteImg.src = deleteIcon;
+
+fabric.Object.prototype.transparentCorners = false;
+fabric.Object.prototype.cornerColor = 'blue';
+fabric.Object.prototype.cornerStyle = 'circle';
+
+const generateStarPoints = (numPoints, outerRadius, innerRadius, centerX, centerY) => {
+  const points = [];
+  const angle = Math.PI / numPoints;
+
+  for (let i = 0; i < 2 * numPoints; i++) {
+    const r = i % 2 === 0 ? outerRadius : innerRadius;
+    const x = centerX + r * Math.cos(i * angle);
+    const y = centerY + r * Math.sin(i * angle);
+    points.push({ x, y });
+  }
+
+  return points;
+};
+
+function AddRect() {
+  const rect = new fabric.Rect({
+    left: 100,
+    top: 50,
+    fill: 'yellow',
+    width: 200,
+    height: 100,
+    objectCaching: false,
+    stroke: 'lightgreen',
+    strokeWidth: 4,
+  });
+
+ 
+
+  rect.controls.deleteControl = new fabric.Control({
+    x: 0.5,
+    y: -0.5,
+    offsetY: 16,
+    cursorStyle: 'pointer',
+    mouseUpHandler: deleteObject,
+    render: renderIcon,
+    cornerSize: 24,
+  });
+
+  canvas.add(rect);
+  canvas.setActiveObject(rect);
+}
+
+const addText = (textValue, left, top, scaleX, scaleY, rotation) => {
+    const text = new fabric.Textbox(textValue, {
+      left: left,
+      top: top,
+      width: 200,
+      fontSize: 20,
+    });
+    canvas.add(text);
+    text.set({
+        angle:rotation,
+        scaleX:scaleX,
+        scaleY:scaleY
+    });
+  };
+
+const addShape = (shape, left, top, scaleX, scaleY, rotation) =>{
+    let newShape;
+
+    switch (shape) {
+      case "rect":
+        newShape = new fabric.Rect({ left: left, top: top, fill: "yellow", width: 100, height: 50 });
+        break;
+      case "triangle":
+        newShape = new fabric.Triangle({ left: left, top: top, fill: "lightblue", width: 100, height: 100 });
+        break;
+      case "circle":
+        newShape = new fabric.Circle({ left: left, top: top, fill: "pink", radius: 50 });
+        break;
+      case "polygon":
+        const starPoints = generateStarPoints(5, 50, 25, 100, 100); 
+        newShape = new fabric.Polygon(starPoints, {
+          left: left,
+          top: top,
+          fill: "gold",
+          objectCaching: false,
+        });
+        break;
+      default:
+        return;
+    }
+    
+    canvas.add(newShape);
+    newShape.set({
+        angle:rotation,
+        scaleX:scaleX,
+        scaleY:scaleY
+    });
+
+}
+
+document.getElementById('add').onclick = () => addShape("Star",68,24,1.2,1.5,90);
+
+
+function deleteObject(_eventData, transform) {
+  const canvas = transform.target.canvas;
+  canvas.remove(transform.target);
+  canvas.requestRenderAll();
+}
+
+function renderIcon(ctx, left, top, _styleOverride, fabricObject) {
+  const size = this.cornerSize;
+  ctx.save();
+  ctx.translate(left, top);
+  ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
+  ctx.drawImage(deleteImg, -size / 2, -size / 2, size, size);
+  ctx.restore();
+}
+    </script>
+</body>
+</html>
